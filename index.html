@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Homepage Personnalisable</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Container principal avec background */
+        .homepage-container {
+            position: relative;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        /* Background media */
+        .background-media {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+        }
+
+        .background-media.active {
+            opacity: 1;
+        }
+
+        .background-media img,
+        .background-media video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Overlay pour améliorer la lisibilité */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 0;
+            transition: background 0.3s ease;
+        }
+
+        /* Contenu principal */
+        .content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            color: white;
+            padding: 2rem;
+            max-width: 800px;
+        }
+
+        .content h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+            font-weight: 700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .content p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 1rem 2rem;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            border-radius: 50px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+
+        .cta-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Panel de customisation */
+        .customization-panel {
+            position: fixed;
+            top: 20px;
+            right: -350px;
+            width: 350px;
+            height: calc(100vh - 40px);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px 0 0 20px;
+            padding: 2rem;
+            transition: right 0.3s ease;
+            z-index: 1000;
+            overflow-y: auto;
+            box-shadow: -5px 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .customization-panel.open {
+            right: 0;
+        }
+
+        .toggle-panel {
+            position: fixed;
+            top: 50%;
+            right: 20px;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: none;
+            color: white;
+            padding: 1rem;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 1001;
+        }
+
+        .toggle-panel:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .panel-section {
+            margin-bottom: 2rem;
+            color: #333;
+        }
+
+        .panel-section h3 {
+            margin-bottom: 1rem;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 0.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 0.7rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .color-input {
+            height: 50px;
+            cursor: pointer;
+        }
+
+        .file-input {
+            padding: 1rem;
+            border: 2px dashed #3498db;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .file-input:hover {
+            background: #f8f9fa;
+            border-color: #2980b9;
+        }
+
+        .range-input {
+            appearance: none;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            outline: none;
+        }
+
+        .range-input::-webkit-slider-thumb {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: #3498db;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .preset-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+
+        .preset-btn {
+            padding: 0.7rem;
+            border: 2px solid #3498db;
+            background: transparent;
+            color: #3498db;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+        }
+
+        .preset-btn:hover {
+            background: #3498db;
+            color: white;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .content h1 {
+                font-size: 2.5rem;
+            }
+            
+            .content p {
+                font-size: 1.1rem;
+            }
+            
+            .customization-panel {
+                width: 100%;
+                right: -100%;
+                border-radius: 0;
+            }
+            
+            .toggle-panel {
+                right: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="homepage-container" id="homepage">
+        <!-- Background media container -->
+        <div class="background-media" id="backgroundMedia"></div>
+        
+        <!-- Overlay -->
+        <div class="overlay" id="overlay"></div>
+        
+        <!-- Contenu principal -->
+        <div class="content" id="content">
+            <h1 id="mainTitle">Bienvenue sur votre site</h1>
+            <p id="mainDescription">Personnalisez cette page selon vos goûts avec des images, vidéos et couleurs.</p>
+            <a href="#" class="cta-button" id="ctaButton">Découvrir</a>
+        </div>
+    </div>
+
+    <!-- Bouton toggle panel -->
+    <button class="toggle-panel" id="togglePanel">⚙️</button>
+
+    <!-- Panel de customisation -->
+    <div class="customization-panel" id="customPanel">
+        <div class="panel-section">
+            <h3>🎨 Apparence</h3>
+            
+            <div class="form-group">
+                <label>Background</label>
+                <select id="backgroundType">
+                    <option value="gradient">Dégradé</option>
+                    <option value="color">Couleur unie</option>
+                    <option value="image">Image</option>
+                    <option value="video">Vidéo</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="colorGroup">
+                <label>Couleur principale</label>
+                <input type="color" class="color-input" id="primaryColor" value="#667eea">
+            </div>
+
+            <div class="form-group" id="secondaryColorGroup">
+                <label>Couleur secondaire</label>
+                <input type="color" class="color-input" id="secondaryColor" value="#764ba2">
+            </div>
+
+            <div class="form-group" id="mediaGroup" style="display: none;">
+                <label>Fichier média</label>
+                <input type="file" id="mediaFile" accept="image/*,video/*" class="file-input">
+                <small>Images: JPG, PNG, WebP | Vidéos: MP4, WebM</small>
+            </div>
+
+            <div class="form-group">
+                <label>Opacité overlay: <span id="overlayValue">30%</span></label>
+                <input type="range" class="range-input" id="overlayOpacity" min="0" max="100" value="30">
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <h3>📝 Contenu</h3>
+            
+            <div class="form-group">
+                <label>Titre principal</label>
+                <input type="text" id="titleText" value="Bienvenue sur votre site">
+            </div>
+
+            <div class="form-group">
+                <label>Description</label>
+                <textarea id="descriptionText" rows="3">Personnalisez cette page selon vos goûts avec des images, vidéos et couleurs.</textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Texte du bouton</label>
+                <input type="text" id="buttonText" value="Découvrir">
+            </div>
+
+            <div class="form-group">
+                <label>Lien du bouton</label>
+                <input type="url" id="buttonLink" value="#" placeholder="https://...">
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <h3>🎯 Presets rapides</h3>
+            <div class="preset-buttons">
+                <button class="preset-btn" onclick="applyPreset('corporate')">Corporate</button>
+                <button class="preset-btn" onclick="applyPreset('creative')">Créatif</button>
+                <button class="preset-btn" onclick="applyPreset('minimal')">Minimal</button>
+                <button class="preset-btn" onclick="applyPreset('nature')">Nature</button>
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <h3>💾 Sauvegarde</h3>
+            <button class="preset-btn" onclick="saveConfig()" style="width: 100%; margin-bottom: 0.5rem;">Sauvegarder</button>
+            <button class="preset-btn" onclick="loadConfig()" style="width: 100%;">Charger</button>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let currentBackgroundMedia = null;
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeEventListeners();
+            loadSavedConfig();
+        });
+
+        // Event listeners
+        function initializeEventListeners() {
+            // Toggle panel
+            document.getElementById('togglePanel').addEventListener('click', toggleCustomPanel);
+            
+            // Background type change
+            document.getElementById('backgroundType').addEventListener('change', handleBackgroundTypeChange);
+            
+            // Color changes
+            document.getElementById('primaryColor').addEventListener('input', updateBackground);
+            document.getElementById('secondaryColor').addEventListener('input', updateBackground);
+            
+            // Media file upload
+            document.getElementById('mediaFile').addEventListener('change', handleMediaUpload);
+            
+            // Overlay opacity
+            document.getElementById('overlayOpacity').addEventListener('input', updateOverlayOpacity);
+            
+            // Text content changes
+            document.getElementById('titleText').addEventListener('input', updateContent);
+            document.getElementById('descriptionText').addEventListener('input', updateContent);
+            document.getElementById('buttonText').addEventListener('input', updateContent);
+            document.getElementById('buttonLink').addEventListener('input', updateContent);
+        }
+
+        // Toggle customization panel
+        function toggleCustomPanel() {
+            const panel = document.getElementById('customPanel');
+            panel.classList.toggle('open');
+        }
+
+        // Handle background type change
+        function handleBackgroundTypeChange() {
+            const type = document.getElementById('backgroundType').value;
+            const colorGroup = document.getElementById('colorGroup');
+            const secondaryColorGroup = document.getElementById('secondaryColorGroup');
+            const mediaGroup = document.getElementById('mediaGroup');
+            
+            // Show/hide relevant controls
+            colorGroup.style.display = (type === 'color' || type === 'gradient') ? 'block' : 'none';
+            secondaryColorGroup.style.display = type === 'gradient' ? 'block' : 'none';
+            mediaGroup.style.display = (type === 'image' || type === 'video') ? 'block' : 'none';
+            
+            updateBackground();
+        }
+
+        // Update background
+        function updateBackground() {
+            const type = document.getElementById('backgroundType').value;
+            const homepage = document.getElementById('homepage');
+            const backgroundMedia = document.getElementById('backgroundMedia');
+            
+            // Clear existing media
+            if (currentBackgroundMedia) {
+                backgroundMedia.innerHTML = '';
+                backgroundMedia.classList.remove('active');
+                currentBackgroundMedia = null;
+            }
+            
+            switch(type) {
+                case 'gradient':
+                    const primary = document.getElementById('primaryColor').value;
+                    const secondary = document.getElementById('secondaryColor').value;
+                    homepage.style.background = `linear-gradient(135deg, ${primary} 0%, ${secondary} 100%)`;
+                    break;
+                    
+                case 'color':
+                    const color = document.getElementById('primaryColor').value;
+                    homepage.style.background = color;
+                    break;
+                    
+                case 'image':
+                case 'video':
+                    homepage.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                    break;
+            }
+        }
+
+        // Handle media upload with compression
+        function handleMediaUpload() {
+            const file = document.getElementById('mediaFile').files[0];
+            if (!file) return;
+            
+            const type = document.getElementById('backgroundType').value;
+            const backgroundMedia = document.getElementById('backgroundMedia');
+            
+            if (type === 'image' && file.type.startsWith('image/')) {
+                // Compress image
+                compressImage(file, (compressedFile) => {
+                    const url = URL.createObjectURL(compressedFile);
+                    backgroundMedia.innerHTML = `<img src="${url}" alt="Background">`;
+                    backgroundMedia.classList.add('active');
+                    currentBackgroundMedia = url;
+                });
+            } else if (type === 'video' && file.type.startsWith('video/')) {
+                // For video, we'll use it directly but with optimization attributes
+                const url = URL.createObjectURL(file);
+                backgroundMedia.innerHTML = `
+                    <video autoplay muted loop preload="metadata">
+                        <source src="${url}" type="${file.type}">
+                    </video>
+                `;
+                backgroundMedia.classList.add('active');
+                currentBackgroundMedia = url;
+            }
+        }
+
+        // Compress image to reduce file size
+        function compressImage(file, callback) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            
+            img.onload = function() {
+                // Calculate new dimensions (max 1920x1080)
+                let { width, height } = calculateDimensions(img.width, img.height, 1920, 1080);
+                
+                canvas.width = width;
+                canvas.height = height;
+                
+                // Draw and compress
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                canvas.toBlob((blob) => {
+                    callback(blob);
+                }, 'image/jpeg', 0.8); // 80% quality
+            };
+            
+            img.src = URL.createObjectURL(file);
+        }
+
+        // Calculate dimensions maintaining aspect ratio
+        function calculateDimensions(originalWidth, originalHeight, maxWidth, maxHeight) {
+            let width = originalWidth;
+            let height = originalHeight;
+            
+            if (width > maxWidth) {
+                height = (height * maxWidth) / width;
+                width = maxWidth;
+            }
+            
+            if (height > maxHeight) {
+                width = (width * maxHeight) / height;
+                height = maxHeight;
+            }
+            
+            return { width: Math.round(width), height: Math.round(height) };
+        }
+
+        // Update overlay opacity
+        function updateOverlayOpacity() {
+            const opacity = document.getElementById('overlayOpacity').value;
+            document.getElementById('overlayValue').textContent = opacity + '%';
+            document.getElementById('overlay').style.background = `rgba(0, 0, 0, ${opacity / 100})`;
+        }
+
+        // Update content
+        function updateContent() {
+            document.getElementById('mainTitle').textContent = document.getElementById('titleText').value;
+            document.getElementById('mainDescription').textContent = document.getElementById('descriptionText').value;
+            document.getElementById('ctaButton').textContent = document.getElementById('buttonText').value;
+            document.getElementById('ctaButton').href = document.getElementById('buttonLink').value;
+        }
+
+        // Preset configurations
+        function applyPreset(preset) {
+            const presets = {
+                corporate: {
+                    backgroundType: 'gradient',
+                    primaryColor: '#2c3e50',
+                    secondaryColor: '#3498db',
+                    title: 'Solutions Professionnelles',
+                    description: 'Découvrez nos services innovants pour votre entreprise.',
+                    buttonText: 'En savoir plus',
+                    overlayOpacity: 40
+                },
+                creative: {
+                    backgroundType: 'gradient',
+                    primaryColor: '#ff6b6b',
+                    secondaryColor: '#4ecdc4',
+                    title: 'Créativité sans limites',
+                    description: 'Explorez un monde de possibilités créatives.',
+                    buttonText: 'Créer',
+                    overlayOpacity: 20
+                },
+                minimal: {
+                    backgroundType: 'color',
+                    primaryColor: '#ffffff',
+                    title: 'Simplicité',
+                    description: 'Moins c\'est plus.',
+                    buttonText: 'Continuer',
+                    overlayOpacity: 0
+                },
+                nature: {
+                    backgroundType: 'gradient',
+                    primaryColor: '#56ab2f',
+                    secondaryColor: '#a8edea',
+                    title: 'Retour aux sources',
+                    description: 'Reconnectez-vous avec la nature.',
+                    buttonText: 'Explorer',
+                    overlayOpacity: 30
+                }
+            };
+            
+            const config = presets[preset];
+            if (config) {
+                // Apply configuration
+                document.getElementById('backgroundType').value = config.backgroundType;
+                document.getElementById('primaryColor').value = config.primaryColor;
+                if (config.secondaryColor) {
+                    document.getElementById('secondaryColor').value = config.secondaryColor;
+                }
+                document.getElementById('titleText').value = config.title;
+                document.getElementById('descriptionText').value = config.description;
+                document.getElementById('buttonText').value = config.buttonText;
+                document.getElementById('overlayOpacity').value = config.overlayOpacity;
+                
+                // Update display
+                handleBackgroundTypeChange();
+                updateContent();
+                updateOverlayOpacity();
+            }
+        }
+
+        // Save configuration to localStorage
+        function saveConfig() {
+            const config = {
+                backgroundType: document.getElementById('backgroundType').value,
+                primaryColor: document.getElementById('primaryColor').value,
+                secondaryColor: document.getElementById('secondaryColor').value,
+                title: document.getElementById('titleText').value,
+                description: document.getElementById('descriptionText').value,
+                buttonText: document.getElementById('buttonText').value,
+                buttonLink: document.getElementById('buttonLink').value,
+                overlayOpacity: document.getElementById('overlayOpacity').value
+            };
+            
+            localStorage.setItem('homepageConfig', JSON.stringify(config));
+            alert('Configuration sauvegardée !');
+        }
+
+        // Load configuration from localStorage
+        function loadConfig() {
+            const saved = localStorage.getItem('homepageConfig');
+            if (saved) {
+                const config = JSON.parse(saved);
+                
+                // Apply saved configuration
+                Object.keys(config).forEach(key => {
+                    const element = document.getElementById(key === 'title' ? 'titleText' : 
+                                                         key === 'description' ? 'descriptionText' : key);
+                    if (element) {
+                        element.value = config[key];
+                    }
+                });
+                
+                // Update display
+                handleBackgroundTypeChange();
+                updateContent();
+                updateOverlayOpacity();
+                
+                alert('Configuration chargée !');
+            }
+        }
+
+        // Load saved configuration on page load
+        function loadSavedConfig() {
+            const saved = localStorage.getItem('homepageConfig');
+            if (saved) {
+                loadConfig();
+            }
+        }
+    </script>
+</body>
+</html>
