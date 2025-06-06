@@ -49,6 +49,10 @@
             opacity: 1;
         }
 
+        .background-media.video {
+            filter: blur(2px);
+        }
+
         /* Main container */
         .container {
             position: relative;
@@ -96,7 +100,7 @@
             position: relative;
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
-            border-radius: 50px;
+            border-radius: 12px;
             padding: 4px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
@@ -119,7 +123,7 @@
             outline: none;
             font-size: 1.1rem;
             background: transparent;
-            border-radius: 50px;
+            border-radius: 8px;
             color: #333;
         }
 
@@ -134,7 +138,7 @@
             bottom: 4px;
             background: linear-gradient(135deg, #667eea, #764ba2);
             border: none;
-            border-radius: 50px;
+            border-radius: 8px;
             padding: 0 1.5rem;
             color: white;
             font-weight: 500;
@@ -164,7 +168,7 @@
             border: 1px solid rgba(255, 255, 255, 0.2);
             color: white;
             padding: 0.75rem 1.5rem;
-            border-radius: 25px;
+            border-radius: 8px;
             text-decoration: none;
             font-size: 0.9rem;
             font-weight: 400;
@@ -184,7 +188,7 @@
             right: 2rem;
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
-            border-radius: 15px;
+            border-radius: 12px;
             padding: 1.5rem;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
             border: 1px solid rgba(255, 255, 255, 0.2);
@@ -192,10 +196,14 @@
             transform: translateX(100%);
             transition: transform 0.3s ease;
             width: 280px;
+            opacity: 0;
+            visibility: hidden;
         }
 
         .customization-panel.open {
             transform: translateX(0);
+            opacity: 1;
+            visibility: visible;
         }
 
         .panel-toggle {
@@ -205,7 +213,7 @@
             background: rgba(255, 255, 255, 0.9);
             backdrop-filter: blur(10px);
             border: none;
-            border-radius: 50%;
+            border-radius: 8px;
             width: 50px;
             height: 50px;
             cursor: pointer;
@@ -376,7 +384,6 @@
                 <option value="gradient">Dégradé par défaut</option>
                 <option value="image">Image personnalisée</option>
                 <option value="video">Vidéo personnalisée</option>
-                <option value="preset">Images prédéfinies</option>
             </select>
             
             <div id="imageSection" style="display: none;">
@@ -388,18 +395,11 @@
                 <input type="url" id="videoUrl" placeholder="URL de la vidéo" onchange="setBackgroundVideo()">
                 <input type="file" id="videoFile" accept="video/*" onchange="handleVideoUpload()" style="margin-top: 0.5rem;">
             </div>
-            
-            <div id="presetSection" style="display: none;">
-                <button onclick="setPresetBackground('nature')">Nature</button>
-                <button onclick="setPresetBackground('space')">Espace</button>
-                <button onclick="setPresetBackground('ocean')">Océan</button>
-                <button onclick="setPresetBackground('mountains')">Montagnes</button>
-            </div>
         </div>
 
         <div class="panel-section">
             <h3>Opacité du masque</h3>
-            <input type="range" id="overlayOpacity" min="0" max="0.8" step="0.1" value="0.3" onchange="changeOverlayOpacity()">
+            <input type="range" id="overlayOpacity" min="0" max="1" step="0.1" value="0.3" onchange="changeOverlayOpacity()">
         </div>
 
         <div class="panel-section">
@@ -428,14 +428,6 @@
         // Variables globales
         let panelOpen = false;
         let currentBackground = 'gradient';
-        
-        // Presets d'images
-        const presetImages = {
-            nature: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?ixlib=rb-4.0.3&auto=format&fit=crop&w=2560&q=80',
-            space: 'https://images.unsplash.com/photo-1446776877081-d282a0f896e2?ixlib=rb-4.0.3&auto=format&fit=crop&w=2560&q=80',
-            ocean: 'https://images.unsplash.com/photo-1505142468610-359e7d316be0?ixlib=rb-4.0.3&auto=format&fit=crop&w=2560&q=80',
-            mountains: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?ixlib=rb-4.0.3&auto=format&fit=crop&w=2560&q=80'
-        };
 
         // Initialisation
         document.addEventListener('DOMContentLoaded', function() {
@@ -485,24 +477,24 @@
             // Masquer toutes les sections
             document.getElementById('imageSection').style.display = 'none';
             document.getElementById('videoSection').style.display = 'none';
-            document.getElementById('presetSection').style.display = 'none';
             
             // Afficher la section appropriée
             if (type === 'image') {
                 document.getElementById('imageSection').style.display = 'block';
             } else if (type === 'video') {
                 document.getElementById('videoSection').style.display = 'block';
-            } else if (type === 'preset') {
-                document.getElementById('presetSection').style.display = 'block';
             } else if (type === 'gradient') {
                 resetBackground();
             }
+            
+            saveSettings();
         }
 
         function setBackgroundImage() {
             const url = document.getElementById('imageUrl').value;
             if (url) {
                 applyImageBackground(url);
+                saveSettings();
             }
         }
 
@@ -510,6 +502,7 @@
             const url = document.getElementById('videoUrl').value;
             if (url) {
                 applyVideoBackground(url);
+                saveSettings();
             }
         }
 
@@ -519,6 +512,7 @@
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     applyImageBackground(e.target.result);
+                    saveSettings();
                 };
                 reader.readAsDataURL(file);
             }
@@ -530,15 +524,9 @@
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     applyVideoBackground(e.target.result);
+                    saveSettings();
                 };
                 reader.readAsDataURL(file);
-            }
-        }
-
-        function setPresetBackground(preset) {
-            const url = presetImages[preset];
-            if (url) {
-                applyImageBackground(url);
             }
         }
 
@@ -550,7 +538,7 @@
 
         function applyVideoBackground(url) {
             const container = document.getElementById('backgroundContainer');
-            container.innerHTML = `<video src="${url}" class="background-media active" autoplay muted loop></video>`;
+            container.innerHTML = `<video src="${url}" class="background-media active video" autoplay muted loop></video>`;
             currentBackground = 'video';
         }
 
@@ -564,6 +552,7 @@
         function changeOverlayOpacity() {
             const opacity = document.getElementById('overlayOpacity').value;
             document.getElementById('overlay').style.opacity = opacity;
+            saveSettings();
         }
 
         // Gestion de la recherche
@@ -616,29 +605,71 @@
             }
         }
 
-        // Sauvegarde et chargement des paramètres
+        // Sauvegarde et chargement des paramètres avec localStorage
         function saveSettings() {
             const settings = {
                 backgroundType: document.getElementById('backgroundType').value,
                 overlayOpacity: document.getElementById('overlayOpacity').value,
                 searchEngine: document.getElementById('searchEngine').value,
                 imageUrl: document.getElementById('imageUrl').value,
-                videoUrl: document.getElementById('videoUrl').value
+                videoUrl: document.getElementById('videoUrl').value,
+                currentBackground: currentBackground,
+                quickLinks: Array.from(document.querySelectorAll('.quick-links .quick-link')).map(link => ({
+                    name: link.textContent,
+                    url: link.href
+                }))
             };
             
-            // Note: Les données sont stockées en mémoire pour cette session
-            window.zensearchSettings = settings;
+            // Sauvegarde en localStorage pour persistance
+            try {
+                localStorage.setItem('zensearchSettings', JSON.stringify(settings));
+            } catch(e) {
+                // Fallback en mémoire si localStorage non disponible
+                window.zensearchSettings = settings;
+            }
         }
 
         function loadSettings() {
-            // Chargement des paramètres depuis la mémoire
-            if (window.zensearchSettings) {
-                const settings = window.zensearchSettings;
+            let settings = null;
+            
+            // Tentative de chargement depuis localStorage
+            try {
+                const saved = localStorage.getItem('zensearchSettings');
+                if (saved) {
+                    settings = JSON.parse(saved);
+                }
+            } catch(e) {
+                // Fallback vers la mémoire
+                settings = window.zensearchSettings;
+            }
+            
+            if (settings) {
                 document.getElementById('backgroundType').value = settings.backgroundType || 'gradient';
                 document.getElementById('overlayOpacity').value = settings.overlayOpacity || '0.3';
                 document.getElementById('searchEngine').value = settings.searchEngine || 'google';
                 document.getElementById('imageUrl').value = settings.imageUrl || '';
                 document.getElementById('videoUrl').value = settings.videoUrl || '';
+                
+                // Restaurer l'arrière-plan
+                if (settings.backgroundType === 'image' && settings.imageUrl) {
+                    applyImageBackground(settings.imageUrl);
+                } else if (settings.backgroundType === 'video' && settings.videoUrl) {
+                    applyVideoBackground(settings.videoUrl);
+                }
+                
+                // Restaurer les liens rapides personnalisés
+                if (settings.quickLinks && settings.quickLinks.length > 5) {
+                    const quickLinks = document.querySelector('.quick-links');
+                    quickLinks.innerHTML = '';
+                    settings.quickLinks.forEach(link => {
+                        const newLink = document.createElement('a');
+                        newLink.href = link.url;
+                        newLink.className = 'quick-link';
+                        newLink.textContent = link.name;
+                        newLink.target = '_blank';
+                        quickLinks.appendChild(newLink);
+                    });
+                }
                 
                 changeBackgroundType();
                 changeOverlayOpacity();
